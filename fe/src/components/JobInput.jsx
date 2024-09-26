@@ -16,6 +16,9 @@ export const JobInput = ({ job, setJob }) => {
           required
         />
       </div>
+      <div className="upload-button-container">
+        {/* Placeholder div to maintain alignment with CVInput */}
+      </div>
     </div>
   );
 };

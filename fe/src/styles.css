@@ -56,6 +56,7 @@ body {
   flex-grow: 1;
   position: relative;
   width: 100%;
+  margin-bottom: 10px;
 }
 
 .input-textarea {
@@ -105,6 +106,28 @@ body {
 .match-button:disabled {
   background-color: #a0aec0;
   cursor: not-allowed;
+}
+
+.upload-button-container {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.upload-button {
+  background-color: #48bb78;
+  color: white;
+  font-weight: bold;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.3s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.upload-button:hover {
+  background-color: #38a169;
+  transform: scale(1.05);
 }
 
 /* EditableCV styles */
