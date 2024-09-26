@@ -17,6 +17,10 @@ app.post('/matchJobCv',
   matchJobCvRaw, createCV, 
   cvToHtml);
 
+app.post('/generatePdf', 
+  createCV, 
+  cvToHtml);  
+
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });

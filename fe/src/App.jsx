@@ -2,83 +2,61 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { CVInput } from './components/CVInput';
 import { JobInput } from './components/JobInput';
+import EditableCV from './components/EditableCV';
 
+const apiEndpoint = import.meta.env.VITE_LOCAL;
 const App = () => {
   const [cv, setCV] = useState('');
   const [job, setJob] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [rewrittenCV, setRewrittenCV] = useState('');
 
-  const server = "https://your-service-name-47779369171.me-west1.run.app/matchJobCv"
-  const local = "http://localhost:8080/matchJobCv"
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     setIsLoading(true);
-
     try {
-        const response = await axios.post(local, 
-            { cv, job },
-            { 
-                responseType: 'blob',
-                headers: {
-                    'Accept': 'application/pdf'
-                }
-            }
-        );
-
-        // Check if the response is actually a PDF
-        if (response.headers['content-type'] === 'application/pdf') {
-            const blob = new Blob([response.data], { type: 'application/pdf' });
-            const url = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.setAttribute('download', 'matched_cv.pdf');
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-            window.URL.revokeObjectURL(url);
-
-            alert('Your matched CV has been downloaded.');
-        } else {
-            // If it's not a PDF, it might be an error message
-            const reader = new FileReader();
-            reader.onload = function() {
-                const errorMessage = JSON.parse(reader.result);
-                console.error('Server error:', errorMessage);
-                alert(`An error occurred: ${errorMessage.error || 'Unknown error'}`);
-            };
-            reader.readAsText(response.data);
-        }
+      const response = await axios.post(`${apiEndpoint}/matchJobCv`, { cv, job });
+      // The backend now returns HTML
+      console.log('response.data.rewrittenCV', response.data);
+      setRewrittenCV(response.data.rewrittenCV);
     } catch (error) {
-        console.error('Error:', error);
-        alert('An error occurred while processing your request.');
+      console.error('Error:', error);
+      alert('An error occurred while processing your request.');
     } finally {
-        setIsLoading(false);
+      setIsLoading(false);
     }
-};
+  };
 
   return (
-    <div className="min-h-screen bg-gray-100 py-6 flex flex-col justify-center sm:py-12">
-      <div className="relative py-3 sm:max-w-xl sm:mx-auto">
-        <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-light-blue-500 shadow-lg transform -skew-y-6 sm:skew-y-0 sm:-rotate-6 sm:rounded-3xl"></div>
-        <div className="relative px-4 py-10 bg-white shadow-lg sm:rounded-3xl sm:p-20">
-          <div className="max-w-md mx-auto">
-            <div>
-              <h1 className="text-2xl font-semibold">CV Job Matcher</h1>
-            </div>
-            <div className="divide-y divide-gray-200">
-              <form onSubmit={handleSubmit} className="py-8 text-base leading-6 space-y-4 text-gray-700 sm:text-lg sm:leading-7">
-                <CVInput cv={cv} setCV={setCV} />
-                <JobInput job={job} setJob={setJob} />
-                <div className="relative">
-                  <button type="submit" disabled={isLoading} className="bg-cyan-500 text-white rounded-md px-4 py-2">
-                    {isLoading ? 'Generating PDF...' : 'Generate PDF'}
-                  </button>
-                </div>
-              </form>
-            </div>
+    <div className="min-h-screen bg-gray-100 p-4 sm:p-6 flex flex-col">
+      <h1 className="text-3xl font-bold text-center mb-6 text-gray-800">CV Job Matcher</h1>
+      <div className="flex flex-col xl:flex-row space-y-6 xl:space-y-0 xl:space-x-6 mb-6">
+        <div className="w-full xl:w-1/2 bg-white rounded-lg shadow-lg p-4 sm:p-6">
+          <h2 className="text-2xl font-semibold mb-4 text-gray-700">CV</h2>
+          <div className="a4-container" style={{ width: '210mm', margin: '0 auto' }}>
+            <CVInput cv={cv} setCV={setCV} />
           </div>
         </div>
+        <div className="w-full xl:w-1/2 bg-white rounded-lg shadow-lg p-4 sm:p-6">
+          <h2 className="text-2xl font-semibold mb-4 text-gray-700">Job Description</h2>
+          <div className="a4-container" style={{ width: '210mm', margin: '0 auto' }}>
+            <JobInput job={job} setJob={setJob} />
+          </div>
+        </div>
+      </div>
+      <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-6">
+        <h2 className="text-2xl font-semibold mb-4 text-gray-700">CV Editor (A4 Format)</h2>
+        <div className="a4-container" style={{ width: '210mm', margin: '0 auto' }}>
+          <EditableCV initialCV={rewrittenCV} apiEndpoint={apiEndpoint} />
+        </div>
+      </div>
+      <div className="fixed right-4 sm:right-6 bottom-4 sm:bottom-6 z-10">
+        <button
+          onClick={handleSubmit}
+          disabled={isLoading}
+          className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-full shadow-lg transition duration-300 ease-in-out transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isLoading ? 'Processing...' : 'Match CV to Job'}
+        </button>
       </div>
     </div>
   );

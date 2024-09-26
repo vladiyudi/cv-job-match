@@ -1,20 +1,48 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 export const CVInput = ({ cv, setCV }) => {
+  const textareaRef = useRef(null);
+  const [height, setHeight] = useState('100vh');
+
+  useEffect(() => {
+    const updateHeight = () => {
+      if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto';
+        textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+        setHeight(`${textareaRef.current.scrollHeight}px`);
+      }
+    };
+
+    updateHeight();
+    window.addEventListener('resize', updateHeight);
+
+    return () => window.removeEventListener('resize', updateHeight);
+  }, [cv]);
+
   return (
-    <div className="relative">
-      <label htmlFor="cv" className="absolute -top-2 left-2 -mt-px inline-block bg-white px-1 text-xs font-medium text-gray-900">
-        CV
+    <div className="h-full flex flex-col">
+      <label htmlFor="cv" className="text-lg font-medium text-gray-700 mb-2">
+        CV Content
       </label>
-      <textarea
-        id="cv"
-        value={cv}
-        onChange={(e) => setCV(e.target.value)}
-        placeholder="Enter your CV here..."
-        className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-cyan-600 sm:text-sm sm:leading-6"
-        rows="5"
-        required
-      />
+      <div className="flex-grow relative overflow-hidden" style={{ width: '210mm', minHeight: height }}>
+        <textarea
+          ref={textareaRef}
+          id="cv"
+          value={cv}
+          onChange={(e) => {
+            setCV(e.target.value);
+          }}
+          onInput={(e) => {
+            e.target.style.height = 'auto';
+            e.target.style.height = `${e.target.scrollHeight}px`;
+            setHeight(`${e.target.scrollHeight}px`);
+          }}
+          placeholder="Enter your CV here..."
+          className="absolute inset-0 w-full h-full p-4 text-gray-900 bg-white border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          style={{ fontSize: '12pt', lineHeight: '1.15', resize: 'none', overflowY: 'hidden' }}
+          required
+        />
+      </div>
     </div>
   );
 };

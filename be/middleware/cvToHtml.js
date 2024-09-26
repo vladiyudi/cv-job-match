@@ -4,18 +4,10 @@ const fs = require('fs').promises;
 
 async function cvToHtml(req, res) {
     try {
-        const source = await fs.readFile('./cvTemplates/cleanDesign.hbs', 'utf8');
-        const template = Handlebars.compile(source);
-        
+     
 
-        const { cvJSON } = res.locals;
+        const { cv } = res.locals;
 
-        console.log("CV", cvJSON);
-
-        const cv = template(JSON.parse(cvJSON));
-
-
-        // const browser = await puppeteer.launch({ headless: 'new' });
         const browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox'] });
 
         const page = await browser.newPage();
