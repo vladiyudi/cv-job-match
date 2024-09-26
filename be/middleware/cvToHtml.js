@@ -6,12 +6,12 @@ async function cvToHtml(req, res) {
     try {
      
 
-        const { cv } = res.locals;
+        const { cvHTML } = req.body;
 
         const browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox'] });
 
         const page = await browser.newPage();
-        await page.setContent(cv, { waitUntil: 'networkidle0', timeout: 60000 });
+        await page.setContent(cvHTML, { waitUntil: 'networkidle0', timeout: 60000 });
 
         const pdfBuffer = await page.pdf({
             format: 'A4',

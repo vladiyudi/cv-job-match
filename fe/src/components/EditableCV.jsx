@@ -2,16 +2,20 @@ import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 
 const EditableCV = ({ initialCV, apiEndpoint }) => {
+
   const [editedCV, setEditedCV] = useState(initialCV);
   const [isLoading, setIsLoading] = useState(false);
   const iframeRef = useRef(null);
-  const [height, setHeight] = useState('297mm'); // A4 height
+
+  const A4_WIDTH = '210mm';
+  const A4_HEIGHT = '297mm';
 
   useEffect(() => {
     if (iframeRef.current) {
       const iframeDocument = iframeRef.current.contentDocument;
       iframeDocument.open();
       iframeDocument.write(`
+        <!DOCTYPE html>
         <html>
           <head>
             <style>
@@ -20,10 +24,21 @@ const EditableCV = ({ initialCV, apiEndpoint }) => {
                 font-size: 12pt;
                 line-height: 1.15;
                 margin: 0;
-                padding: 20px;
-                min-height: 297mm;
-                width: 210mm;
+                padding: 20mm;
+                width: 170mm;
+                height: 257mm;
                 box-sizing: border-box;
+                overflow-y: auto;
+              }
+              @page {
+                size: A4;
+                margin: 0;
+              }
+              @media print {
+                body {
+                  width: 210mm;
+                  height: 297mm;
+                }
               }
             </style>
           </head>
@@ -33,27 +48,6 @@ const EditableCV = ({ initialCV, apiEndpoint }) => {
       iframeDocument.close();
       
       iframeDocument.designMode = 'on';
-      
-      const updateHeight = () => {
-        const newHeight = Math.max(iframeDocument.body.scrollHeight, 297 * 3.7795275591);
-        setHeight(`${newHeight}px`);
-        iframeRef.current.style.height = `${newHeight}px`;
-      };
-      
-      updateHeight();
-      window.addEventListener('resize', updateHeight);
-      
-      const observer = new MutationObserver(updateHeight);
-      observer.observe(iframeDocument.body, { 
-        attributes: true, 
-        childList: true, 
-        subtree: true 
-      });
-
-      return () => {
-        window.removeEventListener('resize', updateHeight);
-        observer.disconnect();
-      };
     }
   }, [editedCV]);
 
@@ -104,17 +98,23 @@ const EditableCV = ({ initialCV, apiEndpoint }) => {
   };
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="flex-grow relative overflow-hidden" style={{ width: '210mm', height: height }}>
+    <div className="flex flex-col items-center">
+      <div 
+        style={{ 
+          width: A4_WIDTH, 
+          height: A4_HEIGHT, 
+          overflow: 'hidden',
+          boxShadow: '0 0 10px rgba(0,0,0,0.1)',
+          margin: '20px 0'
+        }}
+      >
         <iframe
           ref={iframeRef}
           title="CV Editor"
           style={{
             width: '100%',
             height: '100%',
-            border: '1px solid #ccc',
-            borderRadius: '8px',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+            border: 'none',
           }}
         />
       </div>

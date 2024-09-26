@@ -18,7 +18,7 @@ app.post('/matchJobCv',
   cvToHtml);
 
 app.post('/generatePdf', 
-  createCV, 
+  // createCV, 
   cvToHtml);  
 
 app.listen(port, () => {
