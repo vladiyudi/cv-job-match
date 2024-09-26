@@ -1,75 +1,78 @@
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
 
 const EditableCV = ({ initialCV, apiEndpoint }) => {
   const [editedCV, setEditedCV] = useState(initialCV);
   const [isLoading, setIsLoading] = useState(false);
-  const textareaRef = useRef(null);
+  const iframeRef = useRef(null);
   const [height, setHeight] = useState('297mm'); // A4 height
 
   useEffect(() => {
-    const updateHeight = () => {
-      if (textareaRef.current) {
-        textareaRef.current.style.height = 'auto';
-        textareaRef.current.style.height = `${Math.max(textareaRef.current.scrollHeight, 297 * 3.7795275591)}px`;
-        setHeight(`${Math.max(textareaRef.current.scrollHeight, 297 * 3.7795275591)}px`);
-      }
-    };
+    if (iframeRef.current) {
+      const iframeDocument = iframeRef.current.contentDocument;
+      iframeDocument.open();
+      iframeDocument.write(`
+        <html>
+          <head>
+            <style>
+              body {
+                font-family: Arial, sans-serif;
+                font-size: 12pt;
+                line-height: 1.15;
+                margin: 0;
+                padding: 20px;
+                min-height: 297mm;
+                width: 210mm;
+                box-sizing: border-box;
+              }
+            </style>
+          </head>
+          <body contenteditable="true">${editedCV}</body>
+        </html>
+      `);
+      iframeDocument.close();
+      
+      iframeDocument.designMode = 'on';
+      
+      const updateHeight = () => {
+        const newHeight = Math.max(iframeDocument.body.scrollHeight, 297 * 3.7795275591);
+        setHeight(`${newHeight}px`);
+        iframeRef.current.style.height = `${newHeight}px`;
+      };
+      
+      updateHeight();
+      window.addEventListener('resize', updateHeight);
+      
+      const observer = new MutationObserver(updateHeight);
+      observer.observe(iframeDocument.body, { 
+        attributes: true, 
+        childList: true, 
+        subtree: true 
+      });
 
-    updateHeight();
-    window.addEventListener('resize', updateHeight);
-
-    return () => window.removeEventListener('resize', updateHeight);
+      return () => {
+        window.removeEventListener('resize', updateHeight);
+        observer.disconnect();
+      };
+    }
   }, [editedCV]);
 
   useEffect(() => {
-    console.log('initialCV', initialCV);
     setEditedCV(initialCV);
   }, [initialCV]);
-
-  // const handleChange = (e) => {
-  //   const newValue = e.target.value;
-  //   // Preserve HTML structure by only allowing changes to text content
-  //   const updatedHTML = preserveHTMLStructure(editedCV, newValue);
-  //   setEditedCV(updatedHTML);
-  // };
-
-  const handleChange = (content, delta, source, editor) => {
-    setEditedCV(editor.getHTML());
-};
-
-  // const preserveHTMLStructure = (originalHTML, newHTML) => {
-  //   const parser = new DOMParser();
-  //   const originalDoc = parser.parseFromString(originalHTML, 'text/html');
-  //   const newDoc = parser.parseFromString(newHTML, 'text/html');
-
-  //   const updateTextContent = (originalNode, newNode) => {
-  //     if (originalNode.nodeType === Node.TEXT_NODE) {
-  //       originalNode.textContent = newNode.textContent;
-  //     } else if (originalNode.nodeType === Node.ELEMENT_NODE) {
-  //       for (let i = 0; i < originalNode.childNodes.length; i++) {
-  //         if (i < newNode.childNodes.length) {
-  //           updateTextContent(originalNode.childNodes[i], newNode.childNodes[i]);
-  //         }
-  //       }
-  //     }
-  //   };
-
-  //   updateTextContent(originalDoc.body, newDoc.body);
-  //   return originalDoc.documentElement.outerHTML;
-  // };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      const response = await axios.post(`${apiEndpoint}/generatePdf`, 
-        console.log('editedCV', editedCV),
-        { cvHTML: editedCV },
-        { 
+      const updatedContent = iframeRef.current.contentDocument.body.innerHTML;
+      setEditedCV(updatedContent);
+
+      const response = await axios.post(
+        `${apiEndpoint}/generatePdf`,
+        { cvHTML: updatedContent },
+        {
           responseType: 'blob',
           headers: {
             'Accept': 'application/pdf'
@@ -102,31 +105,18 @@ const EditableCV = ({ initialCV, apiEndpoint }) => {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex-grow relative overflow-hidden" style={{ width: '210mm', minHeight: height }}>
-        {/* <textarea
-          ref={textareaRef}
-          className="absolute inset-0 w-full h-full p-4 text-gray-900 bg-white border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          value={editedCV}
-          onChange={handleChange}
-          style={{ 
-            fontSize: '12pt', 
-            lineHeight: '1.15', 
-            resize: 'none', 
-            overflowY: 'auto',
-            whiteSpace: 'pre-wrap',
-            wordWrap: 'break-word'
+      <div className="flex-grow relative overflow-hidden" style={{ width: '210mm', height: height }}>
+        <iframe
+          ref={iframeRef}
+          title="CV Editor"
+          style={{
+            width: '100%',
+            height: '100%',
+            border: '1px solid #ccc',
+            borderRadius: '8px',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
           }}
-        /> */}
-            <div style={{ border: '1px solid #ccc', padding: '20px', marginBottom: '20px' }}>
-            <ReactQuill
-            value={editedCV}
-            onChange={handleChange}
-            style={{
-                height: '100vh',
-                marginBottom: '20px',
-            }}
         />
-        </div>
       </div>
       <button
         onClick={handleSubmit}
