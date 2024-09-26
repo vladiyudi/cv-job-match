@@ -5,7 +5,6 @@ const fs = require('fs').promises;
 async function cvToHtml(req, res) {
     try {
      
-
         const { cvHTML } = req.body;
 
         const browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox'] });

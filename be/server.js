@@ -14,8 +14,7 @@ app.use(cors());
 app.use(express.json());
 
 app.post('/matchJobCv', 
-  matchJobCvRaw, createCV, 
-  cvToHtml);
+  matchJobCvRaw, createCV);
 
 app.post('/generatePdf', 
   // createCV, 

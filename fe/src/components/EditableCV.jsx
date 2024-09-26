@@ -2,13 +2,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 
 const EditableCV = ({ initialCV, apiEndpoint }) => {
-
   const [editedCV, setEditedCV] = useState(initialCV);
   const [isLoading, setIsLoading] = useState(false);
   const iframeRef = useRef(null);
-
-  const A4_WIDTH = '210mm';
-  const A4_HEIGHT = '297mm';
 
   useEffect(() => {
     if (iframeRef.current) {
@@ -98,33 +94,22 @@ const EditableCV = ({ initialCV, apiEndpoint }) => {
   };
 
   return (
-    <div className="flex flex-col items-center">
-      <div 
-        style={{ 
-          width: A4_WIDTH, 
-          height: A4_HEIGHT, 
-          overflow: 'hidden',
-          boxShadow: '0 0 10px rgba(0,0,0,0.1)',
-          margin: '20px 0'
-        }}
-      >
-        <iframe
-          ref={iframeRef}
-          title="CV Editor"
-          style={{
-            width: '100%',
-            height: '100%',
-            border: 'none',
-          }}
-        />
-      </div>
-      <button
+    <div className="editable-cv-container">
+         <button
         onClick={handleSubmit}
         disabled={isLoading}
-        className="mt-4 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full shadow-lg transition duration-300 ease-in-out transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="generate-pdf-button"
       >
         {isLoading ? 'Generating PDF...' : 'Generate PDF from Edited CV'}
       </button>
+      <div className="cv-iframe-container">
+        <iframe
+          ref={iframeRef}
+          title="CV Editor"
+          className="cv-iframe"
+        />
+      </div>
+   
     </div>
   );
 };

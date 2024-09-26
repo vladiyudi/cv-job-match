@@ -7,7 +7,6 @@ const openai = new OpenAI({apiKey: process.env.OPENAI_API_KEY});
 
 async function createCV(req, res, next) {
 
-  console.log('req.body');
   try {
     let { cvRaw } = res.locals;  
     if (!cvRaw) cvRaw = req.body.cvRaw;
@@ -25,8 +24,6 @@ async function createCV(req, res, next) {
     
     // Generate HTML from the JSON
     const cvHTML = await CVHTMLfromTemp(cvJSON);
-
-    console.log('cvHTML', cvHTML);
 
     // Send the HTML to the frontend
     res.json({ rewrittenCV: cvHTML });
